@@ -1,0 +1,28 @@
+# Node / Frontend
+node_modules/
+dist/
+build/
+.env
+.env.local
+
+# Python / Backend
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+*.sqlite
+*.db
+/backend/data/
+
+# Planning & Assignment PDF artifacts (Excluded from Git)
+AGENT.md
+PLAN.md
+*.pdf
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
