@@ -21,6 +21,11 @@ AGENT.md
 PLAN.md
 *.pdf
 
+# Helper push scripts & schedule logs
+push_remaining.ps1
+push_with_timer.ps1
+COMMIT_SCHEDULE.md
+
 # OS / IDE
 .DS_Store
 Thumbs.db
