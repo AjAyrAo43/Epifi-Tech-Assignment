@@ -1,44 +1,50 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+/**
+ * API client for PulseGuard backend.
+ *
+ * Uses RELATIVE paths ("/api/...") so that:
+ *  - In Docker: NGINX reverse-proxy handles /api/ → backend:8000/api/
+ *  - In local dev: Vite dev-server proxy handles /api/ → localhost:8000/api/
+ *
+ * This eliminates the VITE_API_BASE_URL="" empty-string bypass bug.
+ */
 
 async function handleResponse(response) {
   if (!response.ok) {
     let errorMsg = `HTTP Error ${response.status}`;
     try {
       const errData = await response.json();
-      if (errData.detail) {
-        errorMsg = errData.detail;
-      }
+      if (errData.detail) errorMsg = errData.detail;
     } catch (_) {}
     throw new Error(errorMsg);
   }
-  if (response.status === 204) {
-    return null;
-  }
-  return await response.json();
+  if (response.status === 204) return null;
+  return response.json();
 }
 
 export async function fetchUrls() {
-  const response = await fetch(`${API_BASE_URL}/api/urls`);
-  return handleResponse(response);
+  return handleResponse(await fetch("/api/urls"));
 }
 
-export async function addUrl(url) {
-  const response = await fetch(`${API_BASE_URL}/api/urls`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ url }),
-  });
-  return handleResponse(response);
+export async function addUrl(url, name = "") {
+  const body = { url };
+  if (name && name.trim()) body.name = name.trim();
+  return handleResponse(
+    await fetch("/api/urls", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+  );
 }
 
 export async function deleteUrl(id) {
-  const response = await fetch(`${API_BASE_URL}/api/urls/${id}`, {
-    method: 'DELETE',
-  });
-  return handleResponse(response);
+  return handleResponse(await fetch(`/api/urls/${id}`, { method: "DELETE" }));
 }
 
-export async function fetchUrlChecks(id, limit = 20) {
-  const response = await fetch(`${API_BASE_URL}/api/urls/${id}/checks?limit=${limit}`);
-  return handleResponse(response);
+export async function fetchUrlChecks(id, limit = 30) {
+  return handleResponse(await fetch(`/api/urls/${id}/checks?limit=${limit}`));
+}
+
+export async function fetchUrlDetail(id) {
+  return handleResponse(await fetch(`/api/urls/${id}`));
 }

@@ -7,9 +7,11 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    // Proxy /api/* to the backend during local development.
+    // In Docker production, NGINX handles this proxy instead.
     proxy: {
       '/api': {
-        target: process.env.VITE_API_BASE_URL || 'http://localhost:8000',
+        target: 'http://localhost:8000',
         changeOrigin: true,
       }
     }

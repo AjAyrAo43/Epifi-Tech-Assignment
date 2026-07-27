@@ -89,7 +89,11 @@ export default function CheckHistoryModal({ urlItem, onClose }) {
                       )}
                     </td>
                     <td className="time-text">
-                      {new Date(chk.checked_at).toLocaleString()}
+                      {new Date(
+                        chk.checked_at.endsWith('Z') || chk.checked_at.includes('+')
+                          ? chk.checked_at
+                          : chk.checked_at + 'Z'
+                      ).toLocaleString()}
                     </td>
                   </tr>
                 ))}

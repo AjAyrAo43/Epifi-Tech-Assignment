@@ -4,10 +4,11 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 COPY . .
-ENV VITE_API_BASE_URL=""
+# No VITE_API_BASE_URL needed — frontend uses relative /api/ paths
+# so NGINX handles the proxy inside the container network.
 RUN npm run build
 
 # Stage 2: Serve via NGINX

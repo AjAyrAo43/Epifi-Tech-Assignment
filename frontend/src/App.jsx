@@ -14,7 +14,20 @@ export default function App() {
   const [fetchError, setFetchError] = useState('');
   const [lastUpdated, setLastUpdated] = useState(null);
   const [selectedUrlForHistory, setSelectedUrlForHistory] = useState(null);
+  const [toasts, setToasts] = useState([]);
 
+  // ------------------------------------------------------------------
+  // Toast notification helpers
+  // ------------------------------------------------------------------
+  const pushToast = useCallback((message, type = 'success') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
+  }, []);
+
+  // ------------------------------------------------------------------
+  // Data polling
+  // ------------------------------------------------------------------
   const loadUrls = useCallback(async (isInitial = false) => {
     try {
       if (isInitial) setLoading(true);
@@ -32,35 +45,40 @@ export default function App() {
 
   useEffect(() => {
     loadUrls(true);
-    const interval = setInterval(() => {
-      loadUrls(false);
-    }, POLL_INTERVAL_MS);
-
+    const interval = setInterval(() => loadUrls(false), POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [loadUrls]);
 
-  const handleAddUrl = async (urlStr) => {
-    await addUrl(urlStr);
+  // ------------------------------------------------------------------
+  // Handlers
+  // ------------------------------------------------------------------
+  const handleAddUrl = async (urlStr, name) => {
+    await addUrl(urlStr, name);
     await loadUrls(false);
+    pushToast(`Now monitoring ${urlStr}`, 'success');
   };
 
-  const handleDeleteUrl = async (id) => {
-    if (!window.confirm('Are you sure you want to stop monitoring this URL?')) return;
+  const handleDeleteUrl = async (id, urlStr) => {
+    if (!window.confirm('Stop monitoring this URL?')) return;
     try {
       await deleteUrl(id);
       setUrls(prev => prev.filter(u => u.id !== id));
+      pushToast(`Removed ${urlStr || 'URL'} from monitoring.`, 'info');
     } catch (err) {
-      alert(err.message || 'Failed to delete URL');
+      pushToast(err.message || 'Failed to delete URL', 'error');
     }
   };
 
+  // ------------------------------------------------------------------
+  // Render
+  // ------------------------------------------------------------------
   return (
     <div className="container">
       <Navbar lastUpdated={lastUpdated} />
 
       {fetchError && (
         <div className="error-banner" style={{ marginBottom: '1.5rem' }}>
-          <strong>Service Alert:</strong> {fetchError} (Retrying automatically every 5s...)
+          <strong>Service Alert:</strong> {fetchError} (Retrying every 5s…)
         </div>
       )}
 
@@ -70,7 +88,7 @@ export default function App() {
 
       {loading ? (
         <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-          Loading monitored targets...
+          Loading monitored targets…
         </div>
       ) : (
         <UrlList
@@ -86,6 +104,15 @@ export default function App() {
           onClose={() => setSelectedUrlForHistory(null)}
         />
       )}
+
+      {/* Toast notifications */}
+      <div className="toast-container">
+        {toasts.map(t => (
+          <div key={t.id} className={`toast toast-${t.type}`}>
+            {t.message}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
